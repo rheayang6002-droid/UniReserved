@@ -30,6 +30,7 @@ class AdminPaymentController extends Controller
             'title'   => 'Payment Verified',
             'message' => "Your payment for reservation {$payment->reservation->reference_code} has been verified.",
             'type'    => 'payment',
+            'link'    => "/reservations/{$payment->reservation_id}",
         ]);
 
         return back()->with('success', 'Payment verified.');
@@ -42,6 +43,7 @@ class AdminPaymentController extends Controller
             'title'   => 'Payment Rejected',
             'message' => "Your payment for reservation {$payment->reservation->reference_code} was rejected. Please resubmit.",
             'type'    => 'payment',
+            'link'    => "/reservations/{$payment->reservation_id}",
         ]);
 
         return back()->with('success', 'Payment rejected.');

@@ -14,11 +14,26 @@ class NotificationController extends Controller
             ->latest()
             ->paginate(20);
 
-        Notification::where('user_id', $request->user()->id)
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
-
         return Inertia::render('notifications/index', [
+            'notifications' => $notifications,
+        ]);
+    }
+
+    public function poll(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $unreadCount = Notification::where('user_id', $userId)
+            ->where('is_read', false)
+            ->count();
+
+        $notifications = Notification::where('user_id', $userId)
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'unread_count'  => $unreadCount,
             'notifications' => $notifications,
         ]);
     }
@@ -29,6 +44,10 @@ class NotificationController extends Controller
             ->where('id', $id)
             ->update(['is_read' => true]);
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return back();
     }
 
@@ -36,6 +55,10 @@ class NotificationController extends Controller
     {
         Notification::where('user_id', $request->user()->id)
             ->update(['is_read' => true]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return back();
     }

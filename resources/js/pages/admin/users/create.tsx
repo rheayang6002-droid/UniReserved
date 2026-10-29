@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, UserPlus, Shield, GraduationCap, Briefcase, Lock, Mail, User, Phone, BookOpen } from 'lucide-react';
+import { ArrowLeft, UserPlus, Shield, GraduationCap, Briefcase, Lock, Mail, User, Phone, BookOpen, Crown, CreditCard } from 'lucide-react';
 
 export default function AdminUsersCreate() {
     const { data, setData, post, processing, errors } = useForm({
@@ -49,11 +49,12 @@ export default function AdminUsersCreate() {
                             <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
                                 Account Role *
                             </label>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {[
-                                    { value: 'student', label: 'Student', icon: GraduationCap, desc: 'Can reserve & queue' },
-                                    { value: 'staff', label: 'Staff / Cashier', icon: Briefcase, desc: 'Fulfillment & payments' },
-                                    { value: 'admin', label: 'Administrator', icon: Shield, desc: 'Full system control' },
+                                    { value: 'student', label: 'Student', icon: GraduationCap, desc: 'Uniform reservations' },
+                                    { value: 'staff', label: 'BEO Staff / Admin', icon: Briefcase, desc: 'BEO operations & release' },
+                                    { value: 'cashier', label: 'School Cashier', icon: CreditCard, desc: 'Payment & official receipts' },
+                                    { value: 'super_admin', label: 'Super Admin', icon: Crown, desc: 'System governance & RBAC' },
                                 ].map((r) => (
                                     <button
                                         key={r.value}

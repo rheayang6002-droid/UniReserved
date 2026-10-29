@@ -65,6 +65,8 @@ class AdminReservationController extends Controller
 
     public function approve(Request $request, Reservation $reservation)
     {
+        abort_unless($request->user()->can('manage reservations'), 403, 'Unauthorized.');
+
         if ($reservation->reservation_status !== 'reserved') {
             return back()->withErrors(['error' => 'Reservation cannot be approved in its current state.']);
         }
@@ -84,12 +86,34 @@ class AdminReservationController extends Controller
 
     public function reject(Request $request, Reservation $reservation)
     {
+        abort_unless($request->user()->can('manage reservations'), 403, 'Unauthorized.');
+
         $request->validate(['reason' => 'nullable|string|max:500']);
 
         DB::transaction(function () use ($request, $reservation) {
             // Release inventory
             foreach ($reservation->items as $item) {
                 $item->productSize?->inventory?->decrement('reserved_stock', $item->quantity);
+
+                if ($item->product && $item->product->isBundle()) {
+                    $item->product->loadMissing('bundleItems.componentProduct.sizes.inventory');
+                    foreach ($item->product->bundleItems as $bundleItem) {
+                        $component = $bundleItem->componentProduct;
+                        if (!$component) continue;
+                        $compSize = $component->sizes->first(function ($s) use ($item) {
+                            return strcasecmp($s->size, $item->productSize?->size ?? '') === 0;
+                        });
+                        if (!$compSize) {
+                            $compSize = $component->sizes->count() === 1 ? $component->sizes->first() : $component->sizes->first(fn($s) => in_array(strtolower($s->size), ['standard', 'regular', 'onesize', 'one size', 'all']));
+                        }
+                        if ($compSize && $compSize->inventory) {
+                            $compSize->inventory->decrement('reserved_stock', $bundleItem->quantity * $item->quantity);
+                            \App\Models\Product::refreshBundlesStockForComponent($component->id);
+                        }
+                    }
+                } elseif ($item->product_id) {
+                    \App\Models\Product::refreshBundlesStockForComponent($item->product_id);
+                }
             }
 
             $reservation->update([
@@ -112,8 +136,10 @@ class AdminReservationController extends Controller
         return back()->with('success', 'Reservation rejected.');
     }
 
-    public function markReady(Reservation $reservation)
+    public function markReady(Request $request, Reservation $reservation)
     {
+        abort_unless($request->user()->can('manage reservations'), 403, 'Unauthorized.');
+
         $reservation->update([
             'reservation_status' => 'ready_for_claiming',
             'ready_at'           => now(),
@@ -130,8 +156,10 @@ class AdminReservationController extends Controller
         return back()->with('success', 'Marked as ready for claiming.');
     }
 
-    public function markClaimed(Reservation $reservation)
+    public function markClaimed(Request $request, Reservation $reservation)
     {
+        abort_unless($request->user()->can('manage reservations'), 403, 'Unauthorized.');
+
         DB::transaction(function () use ($reservation) {
             // Deduct from actual stock
             foreach ($reservation->items as $item) {
@@ -139,6 +167,42 @@ class AdminReservationController extends Controller
                 if ($inv) {
                     $inv->decrement('total_stock', $item->quantity);
                     $inv->decrement('reserved_stock', $item->quantity);
+                    $inv->refresh();
+
+                    if ($inv->total_stock <= $inv->reorder_level) {
+                        $prodName = $item->product?->name ?? 'Product';
+                        $size = $item->productSize?->size ?? '';
+                        foreach (\App\Models\User::staffAndAdmins() as $staff) {
+                            Notification::create([
+                                'user_id' => $staff->id,
+                                'title'   => 'Low Stock Alert',
+                                'message' => "Stock for {$prodName} ({$size}) is down to {$inv->total_stock} (Reorder level: {$inv->reorder_level}).",
+                                'type'    => 'system',
+                                'link'    => '/admin/inventory',
+                            ]);
+                        }
+                    }
+                }
+
+                if ($item->product && $item->product->isBundle()) {
+                    $item->product->loadMissing('bundleItems.componentProduct.sizes.inventory');
+                    foreach ($item->product->bundleItems as $bundleItem) {
+                        $component = $bundleItem->componentProduct;
+                        if (!$component) continue;
+                        $compSize = $component->sizes->first(function ($s) use ($item) {
+                            return strcasecmp($s->size, $item->productSize?->size ?? '') === 0;
+                        });
+                        if (!$compSize) {
+                            $compSize = $component->sizes->count() === 1 ? $component->sizes->first() : $component->sizes->first(fn($s) => in_array(strtolower($s->size), ['standard', 'regular', 'onesize', 'one size', 'all']));
+                        }
+                        if ($compSize && $compSize->inventory) {
+                            $compSize->inventory->decrement('total_stock', $bundleItem->quantity * $item->quantity);
+                            $compSize->inventory->decrement('reserved_stock', $bundleItem->quantity * $item->quantity);
+                            \App\Models\Product::refreshBundlesStockForComponent($component->id);
+                        }
+                    }
+                } elseif ($item->product_id) {
+                    \App\Models\Product::refreshBundlesStockForComponent($item->product_id);
                 }
             }
 
@@ -165,5 +229,6 @@ class AdminReservationController extends Controller
         });
 
         return back()->with('success', 'Reservation marked as claimed.');
+
     }
 }

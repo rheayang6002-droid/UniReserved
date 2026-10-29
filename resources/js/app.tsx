@@ -13,6 +13,8 @@ void createInertiaApp({
     layout: (name) => {
         switch (true) {
             case name === 'welcome':
+            case name === 'auth/login':
+            case name === 'error':          // error page renders full-screen, no sidebar
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;

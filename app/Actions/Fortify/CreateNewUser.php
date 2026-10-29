@@ -22,12 +22,31 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
+            'student_id'     => ['nullable', 'string', 'max:50'],
+            'phone'          => ['nullable', 'string', 'max:30'],
+            'course_program' => ['nullable', 'string', 'max:100'],
+            'year_level'     => ['nullable', 'string', 'max:50'],
         ])->validate();
 
-        return User::create([
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'password' => $input['password'],
+        // Enforce Student role strictly; malicious role manipulation is ignored
+        $user = User::create([
+            'name'           => $input['name'],
+            'email'          => $input['email'],
+            'password'       => $input['password'],
+            'role'           => 'student',
+            'student_id'     => $input['student_id'] ?? null,
+            'phone'          => $input['phone'] ?? null,
+            'course_program' => $input['course_program'] ?? null,
+            'year_level'     => $input['year_level'] ?? null,
+            'status'         => 'active',
         ]);
+
+        if (method_exists($user, 'syncRoles')) {
+            $user->syncRoles(['Student']);
+        } elseif (method_exists($user, 'assignRole')) {
+            $user->assignRole('Student');
+        }
+
+        return $user;
     }
 }

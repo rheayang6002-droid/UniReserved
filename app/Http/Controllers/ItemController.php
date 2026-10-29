@@ -11,7 +11,7 @@ class ItemController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'sizes.inventory'])
+        $query = Product::with(['category', 'sizes.inventory', 'bundleItems.componentProduct.sizes.inventory'])
             ->where('is_active', true);
 
         if ($request->filled('category')) {
@@ -23,6 +23,13 @@ class ItemController extends Controller
         }
 
         $products = $query->paginate(12)->withQueryString();
+
+        foreach ($products as $product) {
+            if ($product->isBundle()) {
+                $product->syncBundleStock();
+            }
+        }
+
         $categories = Category::orderBy('sort_order')->get();
 
         return Inertia::render('items/index', [
@@ -34,10 +41,20 @@ class ItemController extends Controller
 
     public function show(Product $product)
     {
-        $product->load(['category', 'sizes.inventory']);
+        $product->load([
+            'category',
+            'sizes.inventory',
+            'bundleItems.componentProduct.sizes.inventory',
+            'bundleItems.componentProduct.category',
+        ]);
+
+        if ($product->isBundle()) {
+            $product->syncBundleStock();
+        }
 
         return Inertia::render('items/show', [
             'product' => $product,
         ]);
     }
 }
+

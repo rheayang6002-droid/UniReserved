@@ -67,9 +67,10 @@ export default function AdminUsersEdit({ user }: { user: UserItem }) {
                                     onChange={(e) => setData('role', e.target.value)}
                                     className="w-full px-3 py-2 bg-white text-gray-900 font-medium border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 cursor-pointer"
                                 >
-                                    <option value="student">Student</option>
-                                    <option value="staff">Staff / Cashier</option>
-                                    <option value="admin">Administrator</option>
+                                    <option value="student">Student (Uniform Reservation)</option>
+                                    <option value="staff">BEO Staff / Admin (Operations & Release)</option>
+                                    <option value="cashier">School Cashier (Payments & Receipts)</option>
+                                    <option value="super_admin">Super Admin (System Governance)</option>
                                 </select>
                                 {errors.role && <p className="text-red-600 text-xs mt-1">{errors.role}</p>}
                             </div>

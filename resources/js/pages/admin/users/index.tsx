@@ -11,6 +11,8 @@ import {
     Trash2,
     UserCheck,
     UserX,
+    CreditCard,
+    Crown,
 } from 'lucide-react';
 
 type UserItem = {
@@ -23,6 +25,7 @@ type UserItem = {
     phone: string | null;
     course_program: string | null;
     year_level: string | null;
+    roles?: { id: number; name: string }[];
     created_at: string;
 };
 
@@ -38,8 +41,15 @@ type Props = {
 };
 
 const ROLE_BADGES: Record<string, { label: string; badgeCls: string; icon: any }> = {
-    admin: { label: 'Admin', badgeCls: 'bg-red-50 text-red-700 border-red-200', icon: Shield },
-    staff: { label: 'Staff / Cashier', badgeCls: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Briefcase },
+    'Super Admin': { label: 'Super Admin', badgeCls: 'bg-amber-50 text-amber-800 border-amber-300', icon: Crown },
+    super_admin: { label: 'Super Admin', badgeCls: 'bg-amber-50 text-amber-800 border-amber-300', icon: Crown },
+    'Staff/Admin': { label: 'BEO Staff / Admin', badgeCls: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Briefcase },
+    admin: { label: 'BEO Staff / Admin', badgeCls: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Briefcase },
+    staff: { label: 'BEO Staff / Admin', badgeCls: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Briefcase },
+    'School Cashier': { label: 'School Cashier', badgeCls: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: CreditCard },
+    Cashier: { label: 'School Cashier', badgeCls: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: CreditCard },
+    cashier: { label: 'School Cashier', badgeCls: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: CreditCard },
+    Student: { label: 'Student', badgeCls: 'bg-blue-50 text-blue-700 border-blue-200', icon: GraduationCap },
     student: { label: 'Student', badgeCls: 'bg-blue-50 text-blue-700 border-blue-200', icon: GraduationCap },
 };
 
@@ -99,8 +109,9 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                         {[
                             { label: 'All Users', value: '' },
                             { label: 'Students', value: 'student' },
-                            { label: 'Staff', value: 'staff' },
-                            { label: 'Admins', value: 'admin' },
+                            { label: 'BEO Staff', value: 'staff' },
+                            { label: 'School Cashiers', value: 'cashier' },
+                            { label: 'Super Admins', value: 'admin' },
                         ].map((tab) => (
                             <button
                                 key={tab.value}
@@ -158,8 +169,9 @@ export default function AdminUsersIndex({ users, filters }: Props) {
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {users.data.map((u) => {
-                                        const role = ROLE_BADGES[u.role] || {
-                                            label: u.role,
+                                        const primaryRole = (u.roles && u.roles[0]?.name) || u.role;
+                                        const role = ROLE_BADGES[primaryRole] || ROLE_BADGES[u.role] || {
+                                            label: primaryRole,
                                             badgeCls: 'bg-gray-100 text-gray-700 border-gray-200',
                                             icon: Users,
                                         };

@@ -21,6 +21,7 @@ type Product = {
     name: string;
     base_price: string;
     gender: string;
+    product_type?: string;
     image_path: string | null;
     category: { name: string; icon: string | null };
     sizes: Size[];
@@ -53,7 +54,8 @@ function resolveImagePath(path: string | null, name: string) {
     if (n.includes('path-fit') && n.includes('pant')) return '/images/products/path-fit-pants.jpg';
     if (n.includes('lace')) return '/images/products/dssc-id-lace.jpg';
 
-    return '/images/school-logo.png';
+    // Do not use the college logo as default; use placeholder
+    return '/images/placeholder-product.svg';
 }
 
 export default function ReservationCreate({ products }: { products: Product[] }) {
@@ -200,15 +202,22 @@ export default function ReservationCreate({ products }: { products: Product[] })
                                                         alt={product.name}
                                                         className="max-h-full max-w-full object-contain"
                                                         onError={(e) => {
-                                                            e.currentTarget.src = '/images/school-logo.png';
+                                                            e.currentTarget.src = '/images/placeholder-product.svg';
                                                         }}
                                                     />
                                                 </div>
 
                                                 <div className="flex-1 min-w-0">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">
-                                                        {product.category?.name}
-                                                    </span>
+                                                    <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">
+                                                            {product.category?.name}
+                                                        </span>
+                                                        {product.product_type && product.product_type !== 'Individual Item' && (
+                                                            <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.2 rounded">
+                                                                {product.product_type}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div className="font-bold text-gray-900 text-sm sm:text-base leading-snug">
                                                         {product.name}
                                                     </div>

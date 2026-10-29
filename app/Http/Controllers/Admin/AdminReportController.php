@@ -13,6 +13,8 @@ class AdminReportController extends Controller
 {
     public function index(Request $request)
     {
+        abort_unless($request->user()->can('view reports'), 403, 'Unauthorized.');
+
         $period = $request->period ?? 'month';
 
         $startDate = match ($period) {
@@ -41,6 +43,8 @@ class AdminReportController extends Controller
 
     public function export(Request $request)
     {
+        abort_unless($request->user()->can('view reports'), 403, 'Unauthorized.');
+
         // Simple CSV export
         $reservations = Reservation::with(['user', 'items.product'])
             ->whereDate('created_at', '>=', $request->from ?? now()->startOfMonth())

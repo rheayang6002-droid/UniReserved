@@ -16,15 +16,32 @@ type Size = {
     inventory: InventoryData | null;
 };
 
+type ComponentProduct = {
+    id: number;
+    name: string;
+    description: string | null;
+    base_price: string;
+    image_path: string | null;
+    category?: { name: string; slug: string };
+};
+
+type BundleItem = {
+    id: number;
+    quantity: number;
+    component_product: ComponentProduct;
+};
+
 type Product = {
     id: number;
     name: string;
     description: string | null;
     base_price: string;
     gender: string;
+    product_type?: string;
     image_path: string | null;
     category: { name: string; slug: string };
     sizes: Size[];
+    bundle_items?: BundleItem[];
 };
 
 function phpPeso(v: number) {
@@ -48,7 +65,8 @@ function resolveImagePath(path: string | null, name: string) {
     if (n.includes('path-fit') && n.includes('pant')) return '/images/products/path-fit-pants.jpg';
     if (n.includes('lace')) return '/images/products/dssc-id-lace.jpg';
 
-    return '/images/school-logo.png';
+    // Do not use the college logo as default; use placeholder
+    return '/images/placeholder-product.svg';
 }
 
 export default function ItemShow({ product }: { product: Product }) {
@@ -95,7 +113,7 @@ export default function ItemShow({ product }: { product: Product }) {
                                 alt={product.name}
                                 className="max-h-[360px] max-w-full object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
                                 onError={(e) => {
-                                    e.currentTarget.src = '/images/school-logo.png';
+                                    e.currentTarget.src = '/images/placeholder-product.svg';
                                 }}
                             />
                         </div>
@@ -104,9 +122,16 @@ export default function ItemShow({ product }: { product: Product }) {
                         <div className="p-6 sm:p-8 flex flex-col justify-between space-y-6">
                             <div className="space-y-4">
                                 <div>
-                                    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#0B2356] text-white tracking-wide mb-2">
-                                        {product.category?.name || 'Supply Item'}
-                                    </span>
+                                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                                        <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#0B2356] text-white tracking-wide">
+                                            {product.category?.name || 'Supply Item'}
+                                        </span>
+                                        {product.product_type && product.product_type !== 'Individual Item' && (
+                                            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 tracking-wide">
+                                                {product.product_type}
+                                            </span>
+                                        )}
+                                    </div>
                                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
                                         {product.name}
                                     </h1>
@@ -114,6 +139,51 @@ export default function ItemShow({ product }: { product: Product }) {
                                         {product.description || 'Official DSSC campus school uniform item.'}
                                     </p>
                                 </div>
+
+                                {/* Bundle Contents (if applicable) */}
+                                {product.bundle_items && product.bundle_items.length > 0 && (
+                                    <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
+                                        <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Package className="w-3.5 h-3.5 text-blue-600" />
+                                            Bundle Contents ({product.bundle_items.length} items included):
+                                        </h3>
+                                        <div className="divide-y divide-gray-200/60">
+                                            {product.bundle_items.map((b) => {
+                                                const compImg = resolveImagePath(
+                                                    b.component_product?.image_path ?? null,
+                                                    b.component_product?.name ?? ''
+                                                );
+                                                return (
+                                                    <div key={b.id} className="py-2 flex items-center justify-between gap-3 text-xs">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 overflow-hidden flex items-center justify-center p-0.5 shrink-0">
+                                                                <img
+                                                                    src={compImg}
+                                                                    alt={b.component_product?.name}
+                                                                    className="max-h-full max-w-full object-contain"
+                                                                    onError={(e) => {
+                                                                        e.currentTarget.src = '/images/placeholder-product.svg';
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <div className="font-bold text-gray-900">
+                                                                    {b.component_product?.name}
+                                                                </div>
+                                                                <div className="text-[11px] text-gray-400">
+                                                                    {b.component_product?.category?.name}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <span className="font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 text-[11px] shrink-0">
+                                                            {b.quantity} unit{b.quantity > 1 ? 's' : ''}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Price & Stock Availability */}
                                 <div className="flex items-baseline gap-3 pt-2">

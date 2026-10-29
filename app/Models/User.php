@@ -10,10 +10,11 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements PasskeyUser
 {
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable, HasRoles;
 
     protected $fillable = [
         'name',
@@ -44,19 +45,42 @@ class User extends Authenticatable implements PasskeyUser
         ];
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('Super Admin') || $this->role === 'super_admin';
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasRole('Super Admin') || $this->hasRole('Staff/Admin') || $this->role === 'admin' || $this->role === 'staff';
+    }
+
+    public function isStaffAdmin(): bool
+    {
+        return $this->hasRole('Staff/Admin') || $this->role === 'staff';
     }
 
     public function isCashier(): bool
     {
-        return $this->role === 'cashier';
+        return $this->hasRole('School Cashier') || $this->hasRole('Cashier') || $this->role === 'cashier';
     }
 
     public function isStudent(): bool
     {
-        return $this->role === 'student';
+        return $this->hasRole('Student') || $this->role === 'student';
+    }
+
+    /**
+     * Retrieve all administrative and staff users to send operational notifications.
+     */
+    public static function staffAndAdmins()
+    {
+        return static::whereIn('role', ['admin', 'staff', 'super_admin'])
+            ->orWhereHas('roles', function ($q) {
+                $q->whereIn('name', ['Super Admin', 'Staff/Admin', 'admin', 'staff']);
+            })
+            ->get()
+            ->unique('id');
     }
 
     public function reservations(): HasMany

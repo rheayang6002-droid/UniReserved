@@ -29,6 +29,7 @@ type Product = {
     description: string | null;
     base_price: string;
     gender: string;
+    product_type?: string;
     image_path: string | null;
     category: Category;
     sizes: Size[];
@@ -53,7 +54,7 @@ function resolveImagePath(path: string | null, name: string) {
         }
         return `/storage/${path}`;
     }
-    // Fallback based on name
+    // Fallback based on name for seeded demo items
     const n = name.toLowerCase();
     if (n.includes('men') && n.includes('shirt')) return '/images/products/mens-uniform-shirt.jpg';
     if (n.includes('men') && n.includes('pant')) return '/images/products/mens-uniform-pants.jpg';
@@ -64,7 +65,8 @@ function resolveImagePath(path: string | null, name: string) {
     if (n.includes('path-fit') && n.includes('pant')) return '/images/products/path-fit-pants.jpg';
     if (n.includes('lace')) return '/images/products/dssc-id-lace.jpg';
 
-    return '/images/school-logo.png';
+    // Do not use the college logo as default for every product; use clean product placeholder
+    return '/images/placeholder-product.svg';
 }
 
 export default function ItemsIndex({ products, categories, filters }: Props) {
@@ -194,17 +196,22 @@ export default function ItemsIndex({ products, categories, filters }: Props) {
                                                 className="object-contain max-h-full max-w-full drop-shadow-xs group-hover:scale-105 transition-transform duration-300"
                                                 loading="lazy"
                                                 onError={(e) => {
-                                                    // Fallback image
-                                                    e.currentTarget.src = '/images/school-logo.png';
+                                                    // Fallback to placeholder instead of college logo
+                                                    e.currentTarget.src = '/images/placeholder-product.svg';
                                                 }}
                                             />
                                         </div>
 
-                                        {/* Category Badge */}
-                                        <div className="mb-2">
+                                        {/* Category & Product Type Badges */}
+                                        <div className="flex flex-wrap items-center gap-1.5 mb-2">
                                             <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#0B2356] text-white tracking-wide">
                                                 {product.category?.name || 'Supply Item'}
                                             </span>
+                                            {product.product_type && product.product_type !== 'Individual Item' && (
+                                                <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 tracking-wide">
+                                                    {product.product_type}
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Product Title */}

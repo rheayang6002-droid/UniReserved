@@ -26,9 +26,9 @@ export default function AuthSplitLayout({
                         <Link href={home()} className="inline-flex flex-col items-center gap-3">
                             <div className="w-20 h-20 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 backdrop-blur-sm">
                                 <img
-                                    src="/images/school-logo.png"
-                                    alt="DSSC Logo"
-                                    className="w-14 h-14 object-contain"
+                                    src="/images/beo-logo.png"
+                                    alt="BEO Logo"
+                                    className="w-16 h-16 object-contain"
                                     onError={(e) => {
                                         e.currentTarget.parentElement!.innerHTML = '<span class="text-3xl">🎓</span>';
                                     }}
@@ -36,7 +36,7 @@ export default function AuthSplitLayout({
                             </div>
                             <div>
                                 <div className="font-bold text-xl">UniReserve</div>
-                                <div className="text-blue-200 text-xs mt-0.5">DSSC School Supply System</div>
+                                <div className="text-blue-200 text-xs mt-0.5">Business Enterprise Office • DSSC</div>
                             </div>
                         </Link>
                         <div className="mt-5 border-t border-white/10 pt-5">

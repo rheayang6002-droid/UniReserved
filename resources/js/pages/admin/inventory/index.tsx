@@ -34,15 +34,26 @@ type Category = {
     slug: string;
 };
 
+type BundleItem = {
+    id: number;
+    component_product?: {
+        name: string;
+    };
+    quantity: number;
+};
+
 type Product = {
     id: number;
     name: string;
     description: string | null;
     base_price: string | number;
     gender: string;
+    product_type?: string;
+    image_path?: string | null;
     is_active: boolean;
     category?: Category;
     sizes: ProductSize[];
+    bundle_items?: BundleItem[];
 };
 
 type PaginatedProducts = {
@@ -220,6 +231,11 @@ export default function AdminInventoryIndex({ products, categories, filters }: P
                                                             {product.category.name}
                                                         </span>
                                                     )}
+                                                    {product.product_type && product.product_type !== 'Individual Item' && (
+                                                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                                            {product.product_type}
+                                                        </span>
+                                                    )}
                                                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 capitalize">
                                                         {product.gender}
                                                     </span>
@@ -233,6 +249,17 @@ export default function AdminInventoryIndex({ products, categories, filters }: P
                                                 <p className="text-xs text-gray-500 line-clamp-1 max-w-2xl">
                                                     {product.description || 'No description provided.'}
                                                 </p>
+
+                                                {product.bundle_items && product.bundle_items.length > 0 && (
+                                                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 pt-0.5">
+                                                        <span className="font-semibold text-gray-700">Components:</span>
+                                                        {product.bundle_items.map((b, i) => (
+                                                            <span key={i} className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 font-medium">
+                                                                {b.quantity}× {b.component_product?.name || 'Item'}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
 
                                                 <div className="text-xs text-gray-500 flex items-center gap-3 pt-1">
                                                     <span>Base Price: <strong className="text-gray-900">₱{Number(product.base_price).toFixed(2)}</strong></span>
